@@ -11,12 +11,12 @@ import Resolver
 
 typealias VehicleResponse = PaginatedResponse<Vehicle>
 
-class VehicleService: ContentListServiceType {
+struct VehicleService: ContentListServiceType {
     @Injected var service: MoyaRequester
     
-    func getItems(for homeItem: HomeItem, page: Int) -> AnyPublisher<[ItemDisplayable], Error> {
+    func getItems(for homeItem: HomeItem, page: Int) -> AnyPublisher<PaginatedInformation, Error> {
         service.execute(decodeTo: VehicleResponse.self, target: ContentRequest.list(content: homeItem.rawValue, page: page))
-            .map { $0.results as [ItemDisplayable] }
+            .map { PaginatedInformation(paginatedResponse: $0) }
             .eraseToAnyPublisher()
     }
 }

@@ -14,6 +14,7 @@ struct StarShip: Decodable {
     let consumables: String
     let crew: String
     let hyperdriveRating: String
+    let url: String
     
     enum CodingKeys: String, CodingKey {
         case name
@@ -22,10 +23,19 @@ struct StarShip: Decodable {
         case consumables
         case crew
         case hyperdriveRating = "hyperdrive_rating"
+        case url
     }
 }
 
 extension StarShip: ItemDisplayable {
+    var id: Int? {
+        guard let pageURL = URL(string: url) else { return nil }
+        
+        let components = URLComponents(url: pageURL, resolvingAgainstBaseURL: false)
+        
+        return Int(components?.queryItems?.first?.value ?? "")
+    }
+    
     var mainTitle: String {
         name
     }

@@ -14,13 +14,16 @@ struct ItemListView: View {
         ScrollView {
             LazyVStack(alignment: .leading) {
                 ForEach(viewModel.items) { item in
-                    NavigationLink(destination: Text(item.displayItem.mainTitle)) {
+                    let detail = CommonDetailView(homeItemType: viewModel.homeItem, item: item)
+                        .navigationTitle(item.displayItem.mainTitle)
+                    
+                    NavigationLink(destination: detail) {
                         ItemListViewRow(item: item.displayItem)
                     }
                     Divider()
                         .onAppear {
                             if viewModel.items.shouldPaginate(for: item) {
-                                print("PAGINATE")
+                                viewModel.fetchContent.accept(())
                             }
                         }
                 }
@@ -55,10 +58,12 @@ struct ItemListViewRow: View {
                     .foregroundColor(.gray)
             }
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
         .padding(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
     }
 }
 
+#if DEBUG
 struct ItemListView_Previews: PreviewProvider {
     static var previews: some View {
         NavigationView {
@@ -66,3 +71,4 @@ struct ItemListView_Previews: PreviewProvider {
         }
     }
 }
+#endif

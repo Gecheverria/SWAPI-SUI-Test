@@ -8,7 +8,7 @@
 import Combine
 import CombineExt
 
-extension Publisher where Output: Decodable, Output: Hashable, Output.Element: Hashable, Output: Sequence {
+extension Publisher where Output: Hashable, Output.Element: Hashable, Output: Sequence {
     
     /// A wrapper of combine scan operator, with the option to either concatenate the results, or not.
     /// - Parameter concatenated: A Boolean that defines whether the last items should be appended to the new values
@@ -20,7 +20,7 @@ extension Publisher where Output: Decodable, Output: Hashable, Output.Element: H
             
             var items: [Output.Element] = []
             
-            guard !previousItems.isSubset(of: newItems) else {
+            guard !newItems.isSubset(of: previousItems) else {
                 items.append(contentsOf: latest)
                 
                 return items
@@ -44,14 +44,6 @@ extension Publisher where Output: PaginationProviderType {
             (latest.currentPage == current.currentPage) && !(current.errorWasThrown ?? false)
         }
         .filter { $0.shouldRequestNextPage }
-        .eraseToAnyPublisher()
-    }
-    
-    func performPaginatedRequest<T: Decodable>(completion: @escaping (Int) -> AnyPublisher<PaginatedResponse<T>, Failure>) -> AnyPublisher<PaginationProviderType, Failure> {
-        flatMap { parameters in
-            completion(parameters.nextPage)
-        }
-        .map { PaginatedResponse(count: $0.count, next: $0.next, previous: $0.previous, results: $0.results, errorWasThrown: false) }
         .eraseToAnyPublisher()
     }
 }

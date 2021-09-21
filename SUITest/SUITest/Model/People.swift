@@ -16,6 +16,7 @@ struct People: Decodable {
     let eyeColor: String
     let birthYear: String
     let gender: String
+    let url: String
     
     enum CodingKeys: String, CodingKey {
         case name
@@ -26,10 +27,19 @@ struct People: Decodable {
         case eyeColor = "eye_color"
         case birthYear = "birth_year"
         case gender
+        case url
     }
 }
 
 extension People: ItemDisplayable {
+    var id: Int? {
+        guard let pageURL = URL(string: url) else { return nil }
+        
+        let components = URLComponents(url: pageURL, resolvingAgainstBaseURL: false)
+        
+        return Int(components?.queryItems?.first?.value ?? "")
+    }
+    
     var mainTitle: String {
         name
     }

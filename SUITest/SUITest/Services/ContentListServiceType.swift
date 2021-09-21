@@ -8,5 +8,5 @@
 import Combine
 
 protocol ContentListServiceType {
-    func getItems(for homeItem: HomeItem, page: Int) -> AnyPublisher<[ItemDisplayable], Error>
+    func getItems(for homeItem: HomeItem, page: Int) -> AnyPublisher<PaginatedInformation, Error>
 }

@@ -11,21 +11,20 @@ import Resolver
 
 typealias PeopleResponse = PaginatedResponse<People>
 
-class PeopleService: ContentListServiceType {
-    @Injected var service: MoyaRequester
-    
-    func getItems(for homeItem: HomeItem, page: Int) -> AnyPublisher<[ItemDisplayable], Error> {
-        service.execute(decodeTo: PeopleResponse.self, target: ContentRequest.list(content: homeItem.rawValue, page: page))
-            .map { $0.results as [ItemDisplayable] }
-            .eraseToAnyPublisher()
-    }
+protocol PeopleServiceType {
+    func getPeopleDetail(id: String) -> AnyPublisher<People, Error>
 }
 
-class paginatedPeopleServiceTest {
+struct PeopleService: ContentListServiceType, PeopleServiceType {
     @Injected var service: MoyaRequester
     
-    func getItems(for homeItem: HomeItem, page: Int) -> AnyPublisher<PeopleResponse, Error> {
+    func getItems(for homeItem: HomeItem, page: Int) -> AnyPublisher<PaginatedInformation, Error> {
         service.execute(decodeTo: PeopleResponse.self, target: ContentRequest.list(content: homeItem.rawValue, page: page))
+            .map { PaginatedInformation(paginatedResponse: $0) }
             .eraseToAnyPublisher()
+    }
+    
+    func getPeopleDetail(id: String) -> AnyPublisher<People, Error> {
+        service.execute(target: ContentRequest.detail(content: HomeItem.people.rawValue, itemID: id))
     }
 }

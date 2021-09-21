@@ -8,6 +8,7 @@
 import Foundation
 
 protocol ItemDisplayable: Decodable {
+    var id: Int? { get }
     var mainTitle: String { get }
     var subTitle: String? { get }
 }

@@ -15,6 +15,7 @@ struct SUITestApp: App {
             NavigationView {
                 HomeView()
             }
+            .navigationViewStyle(StackNavigationViewStyle())
             .onAppear {
                 Resolver.registerAllServices()
             }

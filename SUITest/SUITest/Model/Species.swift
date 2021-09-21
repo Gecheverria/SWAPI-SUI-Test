@@ -12,9 +12,18 @@ struct Species: Decodable {
     let language: String
     let designation: String
     let classification: String
+    let url: String
 }
 
 extension Species: ItemDisplayable {
+    var id: Int? {
+        guard let pageURL = URL(string: url) else { return nil }
+        
+        let components = URLComponents(url: pageURL, resolvingAgainstBaseURL: false)
+        
+        return Int(components?.queryItems?.first?.value ?? "")
+    }
+    
     var mainTitle: String {
         name
     }

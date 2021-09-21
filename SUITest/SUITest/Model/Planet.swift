@@ -13,9 +13,18 @@ struct Planet: Decodable {
     let climate: String
     let diameter: String
     let population: String
+    let url: String
 }
 
 extension Planet: ItemDisplayable {
+    var id: Int? {
+        guard let pageURL = URL(string: url) else { return nil }
+        
+        let components = URLComponents(url: pageURL, resolvingAgainstBaseURL: false)
+        
+        return Int(components?.queryItems?.first?.value ?? "")
+    }
+    
     var mainTitle: String {
         name
     }

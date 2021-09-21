@@ -15,6 +15,7 @@ class ItemListViewModel: ObservableObject {
     let homeItem: HomeItem
     
     private var subscriptions = Set<AnyCancellable>()
+    @Published private var lastResponse = PaginatedInformation(data: [], currentPage: 0, shouldRequestNextPage: true, nextPage: 1)
     
     // Input
     let fetchContent: PassthroughRelay<Void> = .init()
@@ -32,47 +33,62 @@ class ItemListViewModel: ObservableObject {
     }
     
     private func configure() {
-        let servicePublisher = fetchContent
-                .share()
+        let triggerPublisher = fetchContent
+            .withLatestFrom($lastResponse)
+            .shouldPerformPagination()
+            .share()
         
-        let dataPublisher = servicePublisher
-                .flatMapLatest { [service, homeItem] in
-                    service.getItems(for: homeItem, page: 1)
-                        .materialize()
-                }
-                .receive(on: DispatchQueue.main)
-                .share()
+        let fetchDataPublisher = triggerPublisher
+            .flatMap { [weak self, service] lastResponse in
+                service
+                    .getItems(for: self?.homeItem ?? .films, page: self?.lastResponse.nextPage ?? 0)
+                    .materialize()
+            }
+            .receive(on: DispatchQueue.main)
+            .share()
         
-        servicePublisher
-            .map { true }
+        let valuesPublisher = fetchDataPublisher
+            .values()
+            .share()
+        
+        let failurePublisher = fetchDataPublisher
+            .failures()
+            .share()
+
+        triggerPublisher
+            .map { _ in true }
             .assign(to: \.isLoading, on: self, ownership: .weak)
             .store(in: &subscriptions)
         
-        dataPublisher
+        fetchDataPublisher
             .map { _ in false }
             .assign(to: \.isLoading, on: self, ownership: .weak)
             .store(in: &subscriptions)
         
-        dataPublisher
-            .values()
-            .map { $0.map { ListItemDisplayable(displayItem: $0) } }
+        valuesPublisher
+            .assign(to: \.lastResponse, on: self, ownership: .weak)
+            .store(in: &subscriptions)
+        
+        valuesPublisher
+            .map { $0.data.map { ListItemDisplayable(displayItem: $0) } }
+            .aggregate(concatenated: true)
             .assign(to: \.items, on: self, ownership: .weak)
             .store(in: &subscriptions)
-
-        dataPublisher
-            .failures()
+        
+        failurePublisher
             .map { AlertItem(error: $0) }
             .assign(to: \.errorItem, on: self, ownership: .weak)
             .store(in: &subscriptions)
+        
+        failurePublisher
+            .combineLatest($lastResponse)
+            .map { _, lastResponse in
+                var lastResponse = lastResponse
+                lastResponse.errorWasThrown = true
+                
+                return lastResponse
+            }
+            .assign(to: \.lastResponse, on: self, ownership: .weak)
+            .store(in: &subscriptions)
     }
-}
-
-struct ListItemDisplayable: Identifiable {
-    var id: UUID = UUID()
-    var displayItem: ItemDisplayable
-}
-
-struct AlertItem: Identifiable {
-    let id = UUID()
-    let error: Error
 }

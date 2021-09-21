@@ -21,7 +21,7 @@ struct HomeView: View {
                     })
             }
         }
-        .navigationTitle("Select a section")
+        .navigationBarTitle("Select a section", displayMode: .large)
     }
 }
 
